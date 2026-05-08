@@ -1,0 +1,2522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>らくらく献立診断</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+ 
+        html {
+            -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
+            height: 100%;
+        }
+ 
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #333;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fdf5e6;
+            background-image:
+                linear-gradient(rgba(253, 245, 230, 0.72), rgba(253, 245, 230, 0.78)),
+                url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=2000&h=1333&fit=crop&q=82');
+            background-size: cover;
+            background-position: center;
+            background-attachment: scroll;
+            background-repeat: no-repeat;
+            padding: 20px 16px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+ 
+        .container {
+            background: white;
+            padding: 42px 32px 40px;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(210, 105, 30, 0.12);
+            max-width: 520px;
+            width: 100%;
+            min-height: min(88dvh, 760px);
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+ 
+        h1 {
+            color: #d2691e;
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+ 
+        .subtitle {
+            text-align: center;
+            font-size: clamp(0.8rem, 2.5vw, 0.85rem);
+            color: #aaa;
+            margin-bottom: 24px;
+        }
+ 
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #f0e0d0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #ff7f50;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+        
+        .progress-text {
+            font-size: 0.8rem;
+            color: #aaa;
+            white-space: nowrap;
+            min-width: 40px;
+            text-align: right;
+        }
+ 
+        .question-box {
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+        
+        .question-box.active { 
+            display: block; 
+        }
+ 
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+ 
+        .question-label {
+            font-size: clamp(0.7rem, 2vw, 0.75rem);
+            font-weight: 700;
+            color: #ff7f50;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+ 
+        .question-text {
+            font-weight: 700;
+            font-size: clamp(1rem, 3.5vw, 1.15rem);
+            text-align: center;
+            margin-bottom: 22px;
+            color: #444;
+            line-height: 1.5;
+        }
+ 
+        .btn-container {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+ 
+        .btn-container.three {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+ 
+        .btn-container.three button:nth-child(3) {
+            grid-column: 1 / -1;
+        }
+ 
+        button {
+            background-color: #ff7f50;
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            font-weight: 700;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: background 0.2s, transform 0.1s, opacity 0.2s;
+            flex: 1;
+            min-width: 130px;
+            min-height: 56px;
+            line-height: 1.5;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover { 
+            background-color: #ff6347; 
+        }
+        
+        button:active { 
+            transform: scale(0.97); 
+            opacity: 0.9;
+        }
+ 
+        #result {
+            display: none;
+            animation: fadeIn 0.4s ease;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            min-height: 280px;
+            background: #e8ddd4;
+        }
+ 
+        .result-foreground {
+            position: relative;
+            margin: 10px;
+            padding: 18px 16px 20px;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+ 
+ 
+        .result-card {
+            background-color: #fff5ee;
+            padding: 18px 20px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            border: 1.5px dashed #ff7f50;
+        }
+ 
+        .result-card p {
+            font-size: clamp(0.85rem, 2.5vw, 0.92rem);
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+ 
+        .menu-list {
+            font-weight: 700;
+            color: #d2691e;
+            font-size: clamp(0.9rem, 3vw, 1.05rem);
+            line-height: 2;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+ 
+        .answer-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+        
+        .tag {
+            background: #fff5ee;
+            border: 1px solid #ffb899;
+            color: #d2691e;
+            font-size: clamp(0.7rem, 2vw, 0.78rem);
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+ 
+        .share-wrap {
+            margin-bottom: 18px;
+            padding: 14px 14px 16px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #fff9f4 0%, #fff5ee 100%);
+            border: 1.5px solid #ffd4c0;
+        }
+ 
+        .share-label {
+            font-size: clamp(0.7rem, 2vw, 0.75rem);
+            font-weight: 700;
+            color: #ff7f50;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+ 
+        .share-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+ 
+        .share-btn {
+            flex: 1;
+            min-width: 120px;
+            min-height: 48px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: clamp(0.8rem, 2.5vw, 0.88rem);
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s, transform 0.1s;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+ 
+        .share-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+ 
+        .share-btn-primary {
+            background: linear-gradient(180deg, #ff9a6b 0%, #ff7f50 100%);
+            color: white;
+            box-shadow: 0 2px 10px rgba(255, 127, 80, 0.35);
+        }
+ 
+        .share-btn-secondary {
+            background: #fff;
+            color: #d2691e;
+            border: 2px solid #ffb899;
+        }
+ 
+        .share-feedback {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #2e8b57;
+            text-align: center;
+            min-height: 1.2em;
+        }
+ 
+        .share-feedback:empty {
+            min-height: 0;
+            margin-top: 0;
+        }
+ 
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+ 
+        .link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 13px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            text-align: center;
+            transition: opacity 0.2s;
+            min-height: 48px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .link-btn:hover { 
+            opacity: 0.82; 
+        }
+        
+        .link-btn:active {
+            opacity: 0.7;
+        }
+ 
+        .rakuten { 
+            background-color: #bf0000; 
+            color: white; 
+        }
+        
+        .cookpad { 
+            background-color: #e8562a; 
+            color: white; 
+        }
+        
+        .amazon { 
+            background-color: #232f3e; 
+            color: white; 
+        }
+ 
+        .reset-btn {
+            background: #eee;
+            color: #666;
+            width: 100%;
+            margin-top: 4px;
+            min-height: 48px;
+        }
+        
+        .reset-btn:hover { 
+            background: #ddd; 
+        }
+ 
+        /* スライドショー */
+        .slideshow-wrap {
+            position: relative;
+            width: calc(100% + 32px);
+            margin-left: -16px;
+            margin-right: -16px;
+            margin-top: -18px;
+            aspect-ratio: 16 / 7;
+            border-radius: 16px 16px 0 0;
+            overflow: hidden;
+            background: #f0e0d0;
+            margin-bottom: 20px;
+        }
+ 
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.9s ease;
+        }
+ 
+        .slide.active {
+            opacity: 1;
+        }
+ 
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+ 
+        .slide-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+        }
+ 
+        .slide-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            transition: background 0.3s;
+        }
+ 
+        .slide-dot.active {
+            background: white;
+        }
+ 
+        /* スライド読み込み中のシマー */
+        .slide-skeleton {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #f0e0d0 25%, #ffe8d8 50%, #f0e0d0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+ 
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+ 
+        /* 肩書 + ハートボタン行 */
+        /* キャッチコピー行：中央寄せ、ハートはテキストの右に密着 */
+        .title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+ 
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #b85c1a;
+            line-height: 1.22;
+            margin: 0;
+            text-align: center;
+            letter-spacing: -0.01em;
+        }
+ 
+        /* ハートボタン本体：ブラウザデフォルトを完全リセット */
+        .heart-btn {
+            flex-shrink: 0;
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0;
+            margin: 0;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: visible;
+            -webkit-tap-highlight-color: transparent;
+        }
+ 
+        .heart-btn:hover,
+        .heart-btn:focus,
+        .heart-btn:active,
+        .heart-btn:focus-visible,
+        .heart-btn:focus-within {
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+ 
+        /* SVGハートアイコン */
+        .heart-btn .heart-icon {
+            width: 26px;
+            height: 26px;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: visible;
+            display: block;
+        }
+ 
+        .heart-btn:hover .heart-icon {
+            transform: scale(1.28);
+        }
+ 
+        .heart-btn:active .heart-icon {
+            transform: scale(0.88);
+        }
+ 
+        .heart-path {
+            fill: transparent;
+            stroke: #111;
+            stroke-width: 2px;
+            transition: fill 0.2s, stroke 0.2s;
+        }
+ 
+        .heart-btn.liked .heart-path {
+            fill: #e03030;
+            stroke: #e03030;
+        }
+ 
+        /* 火花エフェクト：ボタン中央から放射 */
+        .spark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 8px;
+            margin-left: -1px;
+            margin-top: -4px;
+            background: #c00;
+            border-radius: 1px;
+            transform-origin: 50% 100%;
+            pointer-events: none;
+            animation: spark-out 0.5s ease-out forwards;
+        }
+ 
+        @keyframes spark-out {
+            0%   { opacity: 1; transform: rotate(var(--a)) translateY(0px)  scaleY(1); }
+            60%  { opacity: 1; }
+            100% { opacity: 0; transform: rotate(var(--a)) translateY(-18px) scaleY(0.3); }
+        }
+ 
+        /* スライダー右下の注釈 */
+        .slide-notice {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.75);
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+ 
+        /* スライダー直下の献立名 */
+        .menu-under-slide {
+            font-size: clamp(0.95rem, 3vw, 1.05rem);
+            font-weight: 700;
+            color: #d2691e;
+            line-height: 2;
+            text-align: center;
+            padding: 14px 4px 6px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+ 
+        @media (max-width: 480px) {
+            body {
+                align-items: flex-start;
+                padding: 12px 12px;
+                padding-top: max(12px, env(safe-area-inset-top));
+                padding-bottom: max(12px, env(safe-area-inset-bottom));
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+ 
+            .container {
+                padding: 28px 18px 32px;
+                border-radius: 20px;
+                min-height: calc(100dvh - 24px);
+                justify-content: flex-start;
+            }
+ 
+            h1 {
+                font-size: 1.35rem;
+            }
+ 
+            .question-text {
+                font-size: 1.05rem;
+                margin-bottom: 18px;
+            }
+ 
+            .btn-container:not(.three) {
+                flex-direction: column;
+            }
+ 
+            .btn-container:not(.three) button {
+                width: 100%;
+                min-width: 0;
+                padding: 15px 16px;
+                min-height: 52px;
+            }
+ 
+            .btn-container.three {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+ 
+            .btn-container.three button {
+                grid-column: span 1;
+                min-width: 0;
+                width: 100%;
+                font-size: 0.82rem;
+                padding: 13px 8px;
+                min-height: 48px;
+            }
+ 
+            .btn-container.three button:nth-child(3) {
+                grid-column: 1 / -1;
+            }
+ 
+            #result {
+                min-height: 240px;
+            }
+ 
+            .result-foreground {
+                margin: 8px;
+                padding: 14px 12px 16px;
+            }
+ 
+            #result h2 {
+                font-size: 1.05rem;
+            }
+ 
+            .result-card {
+                padding: 14px 14px;
+            }
+ 
+            .result-card p {
+                font-size: 0.88rem;
+            }
+ 
+            .menu-list {
+                font-size: 0.95rem;
+                line-height: 1.75;
+            }
+ 
+            .link-btn {
+                padding: 14px 14px;
+                font-size: 0.88rem;
+            }
+ 
+            .share-wrap {
+                padding: 12px 12px 14px;
+            }
+ 
+            .share-actions {
+                flex-direction: column;
+            }
+ 
+            .share-btn {
+                width: 100%;
+                min-width: 0;
+                min-height: 48px;
+            }
+        }
+ 
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .container {
+                max-width: 600px;
+                padding: 40px 36px;
+            }
+            
+            button {
+                min-height: 60px;
+            }
+        }
+ 
+        /* ===== 画面切り替え ===== */
+        .screen { display: none; opacity: 0; transform: scale(0.95); }
+        .screen.active { display: block; animation: screen-fade-in 0.35s ease-out forwards; }
+        @keyframes screen-fade-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+ 
+        /* ===== ホーム画面 ===== */
+        .home-hero {
+            text-align: center;
+            padding: 10px 0 24px;
+        }
+        .home-emoji {
+            font-size: 52px;
+            line-height: 1;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .home-title {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-weight: 900;
+            color: #d2691e;
+            line-height: 1.15;
+            margin-bottom: 8px;
+        }
+        .home-sub {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 28px;
+        }
+        .home-btn-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .home-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 22px;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: transform 0.15s, box-shadow 0.15s;
+            width: 100%;
+            text-align: left;
+        }
+        .home-btn:active { transform: scale(0.97); }
+        .home-btn-primary {
+            background: linear-gradient(135deg, #ff7f50, #ff4500);
+            color: white;
+            box-shadow: 0 4px 16px rgba(255,100,50,0.35);
+        }
+        .home-btn-primary:hover { box-shadow: 0 6px 20px rgba(255,100,50,0.45); }
+        .home-btn-secondary {
+            background: #fff5ee;
+            color: #d2691e;
+            border: 1.5px solid #ffd0b0;
+        }
+        .home-btn-secondary:hover { background: #ffe8d4; }
+        .home-btn-icon {
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+        .home-btn-text { flex: 1; }
+        .home-btn-label { display: block; font-size: 1rem; font-weight: 700; }
+        .home-btn-desc  { display: block; font-size: 0.75rem; opacity: 0.75; margin-top: 2px; }
+ 
+        /* ===== お気に入り画面 ===== */
+        .fav-header,
+        .rank-header,
+        .achievement-header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            min-height: 36px;
+        }
+        @keyframes back-btn-tap {
+            0% { transform: translateY(-50%) scale(1); }
+            40% { transform: translateY(-50%) scale(1.25); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+        .back-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            color: #d2691e;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+            -webkit-tap-highlight-color: transparent;
+            transition: color 0.2s ease;
+        }
+        .back-btn:hover {
+            color: #e8943a !important;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        .back-btn:active {
+            animation: back-btn-tap 0.35s ease-out;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        .back-btn:focus,
+        .back-btn:focus-visible {
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        .fav-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #d2691e;
+            margin: 0;
+        }
+        .fav-empty {
+            text-align: center;
+            color: #bbb;
+            font-size: 0.9rem;
+            padding: 40px 0;
+        }
+        .fav-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+        .fav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .fav-item {
+            background: #fff5ee;
+            border: 1px solid #ffd0b0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .fav-item:hover { background: #ffe8d4; }
+        .fav-item-heart { font-size: 1.2rem; flex-shrink: 0; color: #e03030; }
+        .fav-item-body { flex: 1; min-width: 0; }
+        .fav-item-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #b85c1a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .fav-item-menus {
+            font-size: 0.72rem;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .fav-item-arrow { color: #d2691e; font-size: 1rem; flex-shrink: 0; }
+ 
+        /* ===== ランキング画面 ===== */
+        .rank-header {
+            margin-bottom: 6px;
+        }
+        .rank-note {
+            font-size: 0.72rem;
+            color: #bbb;
+            margin-bottom: 16px;
+            padding-left: 2px;
+        }
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .rank-item {
+            background: #fff5ee;
+            border: 1px solid #ffd0b0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.18s, box-shadow 0.18s;
+        }
+        .rank-item:hover {
+            background: #ffe8d4;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(210,105,30,0.10);
+        }
+        .rank-item:active { transform: scale(0.985); }
+        .rank-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+        .rank-badge.gold   { background: #FFD700; color: #7a5800; }
+        .rank-badge.silver { background: #C0C0C0; color: #555; }
+        .rank-badge.bronze { background: #CD7F32; color: #fff; }
+        .rank-badge.normal { background: #f0e0d0; color: #a0785a; }
+        .rank-item-body { flex: 1; min-width: 0; }
+        .rank-item-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #b85c1a;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rank-item-menus {
+            font-size: 0.72rem;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rank-item-count {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #e03030;
+            flex-shrink: 0;
+        }
+        .rank-empty {
+            text-align: center;
+            color: #bbb;
+            font-size: 0.9rem;
+            padding: 40px 0;
+        }
+ 
+        /* ===== ホームスライドショー ===== */
+        .home-slide-wrap {
+            position: relative;
+            width: calc(100% + 64px);
+            margin-left: -32px;
+            margin-top: -42px;
+            margin-bottom: 22px;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            border-radius: 0 0 24px 24px;
+            background: #f0dcc8;
+        }
+        .home-slide-skeleton {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #f0e0d0 25%, #ffe8d8 50%, #f0e0d0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+        .home-slide-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.9s ease;
+        }
+        .home-slide-img.active { opacity: 1; }
+        .home-slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.55) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 20px 72px;
+            z-index: 2;
+        }
+        .home-slide-emoji { font-size: 2rem; line-height: 1; margin-bottom: 4px; }
+        .home-slide-wrap .home-title {
+            font-size: clamp(1.4rem, 5vw, 1.9rem);
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .home-slide-wrap .home-sub {
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            margin-bottom: 0;
+        }
+        .home-slide-dots {
+            position: absolute;
+            bottom: 52px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 3;
+        }
+        .home-slide-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.45);
+            transition: background 0.3s;
+        }
+        .home-slide-dot.active { background: white; }
+ 
+        /* ===== ガチャボタン ===== */
+        .home-btn-gacha {
+            background: linear-gradient(135deg, #9b59b6, #6c3483);
+            color: white;
+            box-shadow: 0 4px 16px rgba(108,52,131,0.4);
+            animation: gacha-pulse 2.2s ease-in-out infinite;
+        }
+        .home-btn-gacha:hover { box-shadow: 0 6px 22px rgba(108,52,131,0.55); }
+        .home-btn-badge {
+            background: linear-gradient(135deg, #f6b73c, #e67e22);
+            color: white;
+            box-shadow: 0 4px 16px rgba(230,126,34,0.32);
+        }
+        .home-btn-badge:hover { box-shadow: 0 6px 22px rgba(230,126,34,0.46); }
+        @keyframes gacha-pulse {
+            0%,100% { box-shadow: 0 4px 16px rgba(108,52,131,0.4); }
+            50%      { box-shadow: 0 4px 26px rgba(108,52,131,0.7); }
+        }
+ 
+        /* ===== ガチャモーダル ===== */
+        .gacha-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .gacha-modal.open { display: flex; }
+        .gacha-modal-inner {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 24px 22px;
+            width: min(340px, 90vw);
+            text-align: center;
+            position: relative;
+            animation: modal-pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes modal-pop {
+            from { transform: scale(0.7); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+        .gacha-machine { display: block; }
+        .gacha-svg {
+            width: 182px;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.18s ease, filter 0.18s ease;
+            filter: drop-shadow(0 10px 22px rgba(232,64,64,0.28));
+        }
+        .gacha-svg:hover { transform: scale(1.05) translateY(-2px); filter: drop-shadow(0 14px 28px rgba(232,64,64,0.34)); }
+        .gacha-svg:active { transform: scale(0.97); }
+        .gacha-svg .gacha-knob { transform-origin: 166px 146px; }
+        .gacha-machine.spinning .gacha-svg .gacha-knob {
+            animation: gacha-knob-spin 0.55s ease-in-out;
+        }
+        @keyframes gacha-knob-spin {
+            0%   { transform: rotate(0deg); }
+            30%  { transform: rotate(30deg); }
+            72%  { transform: rotate(-10deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .gacha-tap-hint {
+            font-size: 0.82rem;
+            color: #aaa;
+            margin-top: 6px;
+        }
+ 
+        /* カプセル演出 */
+        .gacha-capsule { display: none; }
+        .capsule-ball {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            font-size: 2.4rem;
+            box-shadow: 0 6px 20px rgba(255,160,0,0.45);
+            animation: capsule-bounce 0.5s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes capsule-bounce {
+            from { transform: scale(0) rotate(-180deg); opacity: 0; }
+            to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+        }
+        .capsule-text {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 16px;
+        }
+        .capsule-open-btn {
+            background: linear-gradient(135deg, #ff7f50, #ff4500);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 13px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 14px rgba(255,100,50,0.35);
+            transition: transform 0.12s;
+        }
+        .capsule-open-btn:active { transform: scale(0.96); }
+ 
+        /* ガチャ ハンドル回転アニメ */
+        .gacha-machine.spinning .gacha-svg {
+            animation: handle-spin 0.55s ease-in-out;
+        }
+        @keyframes handle-spin {
+            0%   { transform: rotate(0deg)   scale(1); }
+            30%  { transform: rotate(22deg)  scale(1.05); }
+            70%  { transform: rotate(-8deg)  scale(1.02); }
+            100% { transform: rotate(0deg)   scale(1); }
+        }
+        .gacha-close-btn {
+            background: none;
+            border: none;
+            color: #bbb;
+            font-size: 0.82rem;
+            cursor: pointer;
+            margin-top: 14px;
+            display: block;
+            width: 100%;
+        }
+        .gacha-close-btn:hover { color: #888; }
+
+        /* ===== バッジ・実績画面 ===== */
+        .achievement-note {
+            font-size: 0.78rem;
+            color: #9d8a7d;
+            background: #fff8ef;
+            border: 1px solid #ffe1b8;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .achievement-summary {
+            font-size: 0.78rem;
+            color: #c26b18;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        .achievement-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #ffd7ae;
+            background: linear-gradient(135deg, #fffaf3, #fff1df);
+            box-shadow: 0 8px 20px rgba(230,126,34,0.08);
+        }
+        .achievement-item.locked {
+            background: linear-gradient(135deg, #ece7e2, #ddd5ce);
+            border-color: #d7ccc4;
+            box-shadow: none;
+        }
+        .achievement-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.45rem;
+            background: linear-gradient(135deg, #f9d976, #f39f32);
+            color: #7a4d00;
+            flex-shrink: 0;
+        }
+        .achievement-item.locked .achievement-icon {
+            background: linear-gradient(135deg, #9f968f, #847a72);
+            color: rgba(255,255,255,0.22);
+            text-shadow: 0 0 10px rgba(255,255,255,0.25);
+        }
+        .achievement-body { flex: 1; min-width: 0; }
+        .achievement-title {
+            font-size: 0.92rem;
+            font-weight: 900;
+            color: #a95d12;
+            margin-bottom: 3px;
+        }
+        .achievement-desc {
+            font-size: 0.74rem;
+            color: #8e7a6c;
+            line-height: 1.5;
+        }
+        .achievement-item.locked .achievement-title,
+        .achievement-item.locked .achievement-desc {
+            color: #7e746c;
+        }
+        .achievement-status {
+            font-size: 0.72rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            color: #cc6d18;
+        }
+        .achievement-item.locked .achievement-status {
+            color: #8b8179;
+        }
+        .achievement-toast-layer {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            z-index: 4000;
+            pointer-events: none;
+        }
+        .achievement-toast {
+            min-width: 220px;
+            max-width: min(78vw, 320px);
+            background: rgba(58, 36, 16, 0.95);
+            color: white;
+            border: 1px solid rgba(255, 214, 149, 0.45);
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 18px 30px rgba(0,0,0,0.24);
+            transform: translateX(-120%);
+            opacity: 0;
+            transition: transform 0.36s ease, opacity 0.36s ease;
+        }
+        .achievement-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .achievement-toast-title {
+            font-size: 0.95rem;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .achievement-toast-desc {
+            font-size: 0.77rem;
+            color: rgba(255,255,255,0.82);
+            line-height: 1.45;
+        }
+ 
+    </style>
+</head>
+<body>
+ 
+<div class="container">
+ 
+    <!-- ===== ホーム画面 ===== -->
+    <div id="screen-home" class="screen active">
+ 
+        <!-- ホームスライドショー -->
+        <div class="home-slide-wrap" id="home-slide-wrap">
+            <div class="home-slide-skeleton"></div>
+            <div class="home-slide-overlay">
+                <span class="home-slide-emoji">🍴</span>
+                <h1 class="home-title">らくらく献立診断</h1>
+                <p class="home-sub">今日のご飯、サクッと決めよう</p>
+            </div>
+            <div class="home-slide-dots" id="home-slide-dots"></div>
+        </div>
+ 
+        <div class="home-btn-list">
+            <button class="home-btn home-btn-primary" onclick="showScreen('shindan')">
+                <span class="home-btn-icon">🔍</span>
+                <span class="home-btn-text">
+                    <span class="home-btn-label">今日の献立を診断する</span>
+                    <span class="home-btn-desc">4問答えるだけでおすすめ献立が決まる</span>
+                </span>
+                <span>›</span>
+            </button>
+            <button class="home-btn home-btn-gacha" id="gacha-btn" onclick="openGacha()">
+                <span class="home-btn-icon">🎰</span>
+                <span class="home-btn-text">
+                    <span class="home-btn-label">ガチャで決める！</span>
+                    <span class="home-btn-desc">おまかせでおすすめ献立をランダム提案</span>
+                </span>
+                <span>›</span>
+            </button>
+            <button class="home-btn home-btn-secondary" onclick="showScreen('favorites')">
+                <span class="home-btn-icon">♡</span>
+                <span class="home-btn-text">
+                    <span class="home-btn-label">お気に入り一覧</span>
+                    <span class="home-btn-desc">保存した献立をまとめて確認</span>
+                </span>
+                <span>›</span>
+            </button>
+            <button class="home-btn home-btn-secondary" onclick="showScreen('ranking')">
+                <span class="home-btn-icon">🏆</span>
+                <span class="home-btn-text">
+                    <span class="home-btn-label">人気ランキング</span>
+                    <span class="home-btn-desc">みんなのお気に入りTOP献立</span>
+                </span>
+                <span>›</span>
+            </button>
+            <button class="home-btn home-btn-badge" onclick="showScreen('achievements')">
+                <span class="home-btn-icon">🏅</span>
+                <span class="home-btn-text">
+                    <span class="home-btn-label">バッジ・実績</span>
+                    <span class="home-btn-desc">達成した記録と次の目標をチェック</span>
+                </span>
+                <span>›</span>
+            </button>
+        </div>
+    </div>
+ 
+    <!-- ガチャモーダル -->
+    <div id="gacha-modal" class="gacha-modal" onclick="handleGachaClick(event)">
+        <div class="gacha-modal-inner">
+            <div class="gacha-machine" id="gacha-machine">
+                <!-- ガチャガチャマシンSVG -->
+                <svg class="gacha-svg" viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg" aria-label="ガチャマシーン">
+                    <defs>
+                        <linearGradient id="machineBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ff8a8a"/>
+                            <stop offset="50%" stop-color="#ef4444"/>
+                            <stop offset="100%" stop-color="#c81e1e"/>
+                        </linearGradient>
+                        <linearGradient id="machineBase" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#fcd34d"/>
+                            <stop offset="100%" stop-color="#f59e0b"/>
+                        </linearGradient>
+                        <radialGradient id="domeGlass" cx="38%" cy="28%" r="65%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.98)"/>
+                            <stop offset="35%" stop-color="rgba(224,244,255,0.9)"/>
+                            <stop offset="70%" stop-color="rgba(173,216,240,0.7)"/>
+                            <stop offset="100%" stop-color="rgba(130,190,230,0.5)"/>
+                        </radialGradient>
+                        <radialGradient id="domeHighlight" cx="35%" cy="25%" r="40%">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.9)"/>
+                            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                        </radialGradient>
+                        <linearGradient id="labelPlate" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#fffef5"/>
+                            <stop offset="100%" stop-color="#ffe8c8"/>
+                        </linearGradient>
+                        <filter id="softShadow" x="-20%" y="-10%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="rgba(0,0,0,0.15)"/>
+                        </filter>
+                    </defs>
+                    <!-- 影 -->
+                    <ellipse cx="110" cy="278" rx="70" ry="10" fill="rgba(0,0,0,0.1)"/>
+                    <!-- 脚 -->
+                    <rect x="60" y="248" width="10" height="22" rx="3" fill="#b91c1c"/>
+                    <rect x="150" y="248" width="10" height="22" rx="3" fill="#b91c1c"/>
+                    <!-- 土台 -->
+                    <rect x="42" y="240" width="136" height="16" rx="8" fill="url(#machineBase)" stroke="#d97706" stroke-width="2"/>
+                    <!-- 本体 -->
+                    <rect x="46" y="112" width="128" height="130" rx="14" fill="url(#machineBody)" stroke="#b91c1c" stroke-width="3" filter="url(#softShadow)"/>
+                    <!-- 本体上部の装飾ライン -->
+                    <rect x="46" y="112" width="128" height="18" rx="14" fill="rgba(255,255,255,0.15)"/>
+                    <!-- ドーム（球体型） -->
+                    <ellipse cx="110" cy="114" rx="68" ry="16" fill="#c02626" stroke="#991b1b" stroke-width="2.5"/>
+                    <circle cx="110" cy="114" r="68" fill="url(#domeGlass)" stroke="#8bbde0" stroke-width="2.5" clip-path="url(#domeClip)"/>
+                    <clipPath id="domeClip"><rect x="42" y="20" width="136" height="94"/></clipPath>
+                    <!-- ドームのハイライト -->
+                    <circle cx="110" cy="114" r="64" fill="url(#domeHighlight)" opacity="0.45" clip-path="url(#domeClip)"/>
+                    <!-- 球体の縁の反射 -->
+                    <ellipse cx="90" cy="68" rx="28" ry="12" fill="rgba(255,255,255,0.35)" transform="rotate(-15 90 68)"/>
+                    <!-- ドーム内カプセル（丸くてかわいい） -->
+                    <circle class="capsule-mini" cx="78" cy="82" r="13" fill="#facc15" stroke="#eab308" stroke-width="1.5" opacity="0.9"/>
+                    <circle class="capsule-mini" cx="110" cy="66" r="11" fill="#fb7185" stroke="#e11d48" stroke-width="1.5" opacity="0.9"/>
+                    <circle class="capsule-mini" cx="138" cy="80" r="12" fill="#60a5fa" stroke="#2563eb" stroke-width="1.5" opacity="0.9"/>
+                    <circle class="capsule-mini" cx="95" cy="96" r="10" fill="#34d399" stroke="#059669" stroke-width="1.5" opacity="0.85"/>
+                    <circle class="capsule-mini" cx="126" cy="62" r="9" fill="#fb923c" stroke="#ea580c" stroke-width="1.5" opacity="0.85"/>
+                    <circle class="capsule-mini" cx="68" cy="96" r="8" fill="#c084fc" stroke="#9333ea" stroke-width="1.5" opacity="0.8"/>
+                    <circle class="capsule-mini" cx="148" cy="94" r="9" fill="#f9a8d4" stroke="#db2777" stroke-width="1.5" opacity="0.8"/>
+                    <!-- ラベルプレート -->
+                    <rect x="60" y="140" width="100" height="58" rx="12" fill="url(#labelPlate)" stroke="#f59e0b" stroke-width="2.5"/>
+                    <text x="110" y="164" text-anchor="middle" font-size="14" font-weight="900" fill="#dc2626" font-family="'Noto Sans JP', sans-serif">献立</text>
+                    <text x="110" y="182" text-anchor="middle" font-size="14" font-weight="900" fill="#dc2626" font-family="'Noto Sans JP', sans-serif">ガチャ</text>
+                    <!-- 排出口 -->
+                    <rect x="70" y="214" width="80" height="22" rx="11" fill="#7f1d1d" stroke="#540909" stroke-width="2.5"/>
+                    <rect x="82" y="219" width="56" height="12" rx="6" fill="rgba(0,0,0,0.4)"/>
+                    <!-- ハンドル -->
+                    <g class="gacha-knob">
+                        <circle cx="168" cy="165" r="16" fill="#fef3c7" stroke="#ca8a04" stroke-width="3.5"/>
+                        <circle cx="168" cy="165" r="6" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+                        <rect x="150" y="160" width="22" height="10" rx="5" fill="#fcd34d" stroke="#b45309" stroke-width="2.5"/>
+                        <circle cx="184" cy="165" r="8" fill="#fde047" stroke="#ca8a04" stroke-width="2.5"/>
+                    </g>
+                    <!-- 装飾ネジ -->
+                    <circle cx="54" cy="122" r="4" fill="#fde68a" stroke="#ca8a04" stroke-width="1.5"/>
+                    <circle cx="166" cy="122" r="4" fill="#fde68a" stroke="#ca8a04" stroke-width="1.5"/>
+                    <circle cx="54" cy="234" r="4" fill="#fde68a" stroke="#ca8a04" stroke-width="1.5"/>
+                    <circle cx="166" cy="234" r="4" fill="#fde68a" stroke="#ca8a04" stroke-width="1.5"/>
+                </svg>
+                <p class="gacha-tap-hint" id="gacha-hint">ハンドルを回してね！</p>
+            </div>
+            <!-- カプセル演出 -->
+            <div class="gacha-capsule" id="gacha-capsule">
+                <div class="capsule-ball" id="capsule-ball">
+                    <span class="capsule-icon">🎁</span>
+                </div>
+                <p class="capsule-text" id="capsule-text"></p>
+                <button class="capsule-open-btn" id="capsule-open-btn" onclick="openCapsule()">カプセルを開ける！</button>
+            </div>
+            <button class="gacha-close-btn" onclick="closeGacha()">✕ 閉じる</button>
+        </div>
+    </div>
+ 
+    <!-- ===== 診断画面 ===== -->
+    <div id="screen-shindan" class="screen">
+    <h1>🍴 らくらく献立診断</h1>
+    <p class="subtitle">4つの質問で今日のご飯を決めよう！</p>
+ 
+    <div class="progress-wrap">
+        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="4">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+        <span class="progress-text" id="progress-text">0 / 4</span>
+    </div>
+ 
+    <div class="question-box active" id="q1">
+        <p class="question-label">Q1 / 4</p>
+        <p class="question-text">今の気分はどっち？</p>
+        <div class="btn-container">
+            <button type="button" onclick="answer('mood', 'heavy')" aria-label="ガッツリ食べたい">🍗 ガッツリ<br>食べたい！</button>
+            <button type="button" onclick="answer('mood', 'light')" aria-label="さっぱり済ませたい">🥗 さっぱり<br>済ませたい！</button>
+        </div>
+    </div>
+ 
+    <div class="question-box" id="q2">
+        <p class="question-label">Q2 / 4</p>
+        <p class="question-text">主食はどっち？</p>
+        <div class="btn-container">
+            <button type="button" onclick="answer('base', 'rice')" aria-label="ご飯がいい">🍚 ご飯（米）<br>がいい！</button>
+            <button type="button" onclick="answer('base', 'other')" aria-label="麺・パンがいい">🍜 麺・パン・<br>その他がいい！</button>
+        </div>
+    </div>
+ 
+    <div class="question-box" id="q3">
+        <p class="question-label">Q3 / 4</p>
+        <p class="question-text">調理はどっち？</p>
+        <div class="btn-container">
+            <button type="button" onclick="answer('effort', 'easy')" aria-label="手軽に作りたい">⚡ 手軽に<br>サッと作りたい！</button>
+            <button type="button" onclick="answer('effort', 'cook')" aria-label="しっかり料理したい">👨‍🍳 しっかり<br>料理したい！</button>
+        </div>
+    </div>
+ 
+    <div class="question-box" id="q4">
+        <p class="question-label">Q4 / 4</p>
+        <p class="question-text">ジャンルはどれ？</p>
+        <div class="btn-container three">
+            <button type="button" onclick="answer('genre', 'japanese')" aria-label="和食">🍱 和食</button>
+            <button type="button" onclick="answer('genre', 'western')" aria-label="洋食">🍝 洋食</button>
+            <button type="button" onclick="answer('genre', 'chinese')" aria-label="中華">🥢 中華</button>
+        </div>
+    </div>
+ 
+    <div id="result">
+        <div class="result-foreground">
+            <div id="slideshow-wrap" class="slideshow-wrap">
+                <div class="slide-skeleton" id="slide-skeleton"></div>
+                <div class="slide-dots" id="slide-dots"></div>
+                <span class="slide-notice">※画像はイメージです</span>
+            </div>
+            <div class="menu-under-slide" id="menu-under-slide"></div>
+            <div class="answer-tags" id="answer-tags"></div>
+            <div class="title-row">
+                <p class="result-title" id="result-title"></p>
+                <button class="heart-btn" id="heart-btn" onclick="toggleFavorite()" aria-label="お気に入り">
+                    <svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path class="heart-path" d="M12 21C12 21 3 13.5 3 8a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.5-9 13-9 13z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="result-card">
+                <p id="result-desc"></p>
+            </div>
+            <div class="share-wrap">
+                <p class="share-label">📤 この結果を共有</p>
+                <div class="share-actions">
+                    <button type="button" class="share-btn share-btn-primary" id="btn-share-native" onclick="shareDiagnosisResult()" aria-label="共有する">📤 共有する</button>
+                    <button type="button" class="share-btn share-btn-secondary" id="btn-share-copy" onclick="copyDiagnosisShareText()" aria-label="テキストをコピー">📋 テキストをコピー</button>
+                </div>
+                <p class="share-feedback" id="share-feedback" role="status" aria-live="polite"></p>
+            </div>
+            <div class="links-container">
+                <a id="rakuten-url" href="#" target="_blank" rel="noopener" class="link-btn rakuten">👉 楽天レシピで探す</a>
+                <a id="cookpad-url" href="#" target="_blank" rel="noopener" class="link-btn cookpad">👉 クックパッドで探す</a>
+                <a id="amazon-url" href="#" target="_blank" rel="noopener" class="link-btn amazon">🍳 この料理に便利な道具を見る</a>
+            </div>
+            <button type="button" class="reset-btn" onclick="showScreen('home')" aria-label="メニューに戻る">🏠 メニューに戻る</button>
+        </div>
+    </div>
+    </div><!-- /screen-shindan -->
+ 
+    <!-- ===== お気に入り画面 ===== -->
+    <div id="screen-favorites" class="screen">
+        <div class="fav-header">
+            <button class="back-btn" onclick="showScreen('home')">←</button>
+            <h2 class="fav-title">♡ お気に入り一覧</h2>
+        </div>
+        <div id="fav-list-wrap"></div>
+    </div>
+ 
+    <!-- ===== ランキング画面 ===== -->
+    <div id="screen-ranking" class="screen">
+        <div class="rank-header">
+            <button class="back-btn" onclick="showScreen('home')">←</button>
+            <h2 class="fav-title">人気ランキング</h2>
+        </div>
+        <p class="rank-note">※このデバイスのお気に入り登録数をもとに集計しています</p>
+        <div id="rank-list-wrap"></div>
+    </div>
+
+    <!-- ===== バッジ・実績画面 ===== -->
+    <div id="screen-achievements" class="screen">
+        <div class="achievement-header">
+            <button class="back-btn" onclick="showScreen('home')">←</button>
+            <h2 class="fav-title">🏅 バッジ・実績</h2>
+        </div>
+        <p class="achievement-note">達成前のバッジはシルエット表示になります。進めるほど新しい実績が見えるようになります。</p>
+        <div id="achievement-list-wrap"></div>
+    </div>
+ 
+</div>
+<div id="achievement-toast-layer" class="achievement-toast-layer" aria-live="polite" aria-atomic="true"></div>
+ 
+<script>
+    const answers = {};
+ 
+    const answerLabels = {
+        mood:   { heavy: '🍗 ガッツリ',   light: '🥗 さっぱり' },
+        base:   { rice:  '🍚 ご飯',        other: '🍜 麺・パン' },
+        effort: { easy:  '⚡ 手軽に',      cook:  '👨‍🍳 しっかり' },
+        genre:  { japanese: '🍱 和食',     western: '🍝 洋食',   chinese: '🥢 中華' }
+    };
+ 
+    const steps = ['q1', 'q2', 'q3', 'q4'];
+    let currentStep = 0;
+ 
+    function answer(key, value) {
+        answers[key] = value;
+        currentStep++;
+ 
+        const pct = (currentStep / 4) * 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-text').textContent = currentStep + ' / 4';
+ 
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.setAttribute('aria-valuenow', currentStep);
+ 
+        if (currentStep < 4) {
+            document.getElementById(steps[currentStep - 1]).classList.remove('active');
+            document.getElementById(steps[currentStep]).classList.add('active');
+        } else {
+            document.getElementById('q4').classList.remove('active');
+            window.__resultSource = 'diagnosis';
+            showResult();
+        }
+    }
+ 
+    const resultData = {
+        'heavy_rice_easy_japanese': {
+            title: '空腹を即破壊する、お手軽ご飯の独裁者',
+            desc: '疲れた日でもパパッと完成！ご飯さえあればすぐ食べられる和の定番。',
+            menus: '🍳 卵かけご飯　🥚 納豆ご飯　🍱 おにぎり＋インスタント味噌汁　🐟 ツナ缶混ぜご飯',
+            search: '簡単 丼 レシピ', item: '電気ケトル'
+        },
+        'heavy_rice_easy_western': {
+            title: '缶詰と白米が織りなす、西洋的怠惰の美学',
+            desc: '手軽なのに満足感◎！缶詰・レトルトをフル活用した洋風ご飯。',
+            menus: '🍛 レトルトカレー　🍳 ハムエッグ丼　🧀 ツナチーズご飯　🧈 バターライス',
+            search: '簡単 洋食 ご飯', item: '電子レンジ調理器'
+        },
+        'heavy_rice_easy_chinese': {
+            title: '白米という大海原を制する、中華の覇者',
+            desc: 'フライパン一つで完成！ボリューム満点の手軽な中華飯。',
+            menus: '🍳 チャーハン　🥚 天津飯（レトルトあん）　🍚 中華丼（あんかけ）　🥩 そぼろご飯',
+            search: '簡単 チャーハン', item: 'フライパン'
+        },
+        'heavy_rice_cook_japanese': {
+            title: '魂に染み渡る、ニッポン胃袋の総大将',
+            desc: 'じっくり丁寧に作る、和の定番ガッツリご飯！だしを効かせて本格的に。',
+            menus: '🍱 カツ丼　🍳 親子丼　🥩 牛丼（玉ねぎ炊き）　🍣 手巻き寿司',
+            search: '丼 レシピ 本格', item: '出汁パック'
+        },
+        'heavy_rice_cook_western': {
+            title: '鍋をふるう者が王となる、洋食の戦場',
+            desc: '手間をかけた分だけおいしい！洋食の王道メニューで食卓を豪華に。',
+            menus: '🍛 本格カレー　🍳 オムライス　🍅 ハヤシライス　🥩 ビーフストロガノフ',
+            search: 'オムライス レシピ', item: '鋳鉄鍋'
+        },
+        'heavy_rice_cook_chinese': {
+            title: '火力こそ正義。中華鍋を握った者に勝者の称号を',
+            desc: '本格中華で食卓を豪華に！火力と味付けの勢いが決め手。',
+            menus: '🍚 中華おこわ　🌶 麻婆豆腐丼　🦐 エビチリ丼　🥩 回鍋肉丼',
+            search: '本格 中華 ご飯 レシピ', item: '中華鍋'
+        },
+        'heavy_other_easy_japanese': {
+            title: '麺よ、今すぐ胃袋を救いに来い',
+            desc: 'サッと茹でるだけ！和風ボリューム麺で手軽に大満足。',
+            menus: '🍜 袋ラーメン（トッピング盛り）　🍝 焼きうどん　🍱 そうめんチャンプルー　🥡 カップ焼きそば',
+            search: '簡単 うどん ガッツリ', item: '深型フライパン'
+        },
+        'heavy_other_easy_western': {
+            title: 'トーストと共に、今日も戦場へ向かう',
+            desc: 'パパッと作れるのにボリューム満点の洋風メニュー！',
+            menus: '🍝 レトルトナポリタン　🥪 厚切りトースト＋目玉焼き　🧀 チーズトースト　🥪 ホットサンド',
+            search: '簡単 パスタ ガッツリ', item: 'ホットサンドメーカー'
+        },
+        'heavy_other_easy_chinese': {
+            title: '箸が止まらない。これが中華麺の呪縛だ',
+            desc: '中華系の麺はボリューム◎。サッと作れる最強コンビ！',
+            menus: '🍜 袋焼きそば　🥡 カップタンメン　🍝 中華風ラーメン　🥢 ピリ辛ビビン麺',
+            search: '簡単 焼きそば 中華', item: '電気フライパン'
+        },
+        'heavy_other_cook_japanese': {
+            title: '一杯に人生を賭ける、麺道の求道者',
+            desc: 'こだわりの一杯に挑戦！和の本格麺料理で実力を発揮。',
+            menus: '🍜 鶏ガラスープラーメン　🍝 肉うどん（だし炊き）　🥘 豚骨風つけ麺　🍜 鴨南蛮そば',
+            search: '本格 うどん ラーメン レシピ', item: '土鍋'
+        },
+        'heavy_other_cook_western': {
+            title: 'フォークを握れ。これは食事ではなく芸術だ',
+            desc: 'しっかり作る洋風麺＆パンで豪華な食卓に！',
+            menus: '🍝 ボロネーゼ　🧀 グラタン　🥐 フレンチトースト　🍕 ピザ（生地から）',
+            search: 'ボロネーゼ レシピ', item: 'パスタポット'
+        },
+        'heavy_other_cook_chinese': {
+            title: '辛さと旨さが格闘する、舌上の仁義なき戦い',
+            desc: '本格中華麺に挑戦！濃厚スープとコシのある麺が主役。',
+            menus: '🍜 担々麺　🌶 麻辣麺　🥡 炸醤麺（ジャージャー麺）　🥢 広東風炒め麺',
+            search: '担々麺 本格 レシピ', item: '中華鍋'
+        },
+        'light_rice_easy_japanese': {
+            title: '白米という名の、日本人の精神的ふるさと',
+            desc: 'ヘルシーで胃に優しい！あっさり和風ご飯でほっと一息。',
+            menus: '🍚 梅干しご飯　🥗 冷や奴＋ご飯　🍱 塩昆布おにぎり　🥬 野菜炒めご飯',
+            search: 'あっさり 和食 ご飯', item: '土鍋'
+        },
+        'light_rice_easy_western': {
+            title: '罪悪感ゼロ。体が思わず礼を言う洋風ご飯',
+            desc: '手軽に作れる爽やか洋風ご飯で気分転換しよう！',
+            menus: '🍅 トマトリゾット（缶詰活用）　🥗 シーザーサラダ丼　🥚 ツナサラダ丼　🍚 コンソメスープかけご飯',
+            search: 'さっぱり 洋食 ご飯', item: '電子レンジ調理器'
+        },
+        'light_rice_easy_chinese': {
+            title: '胃に優しく、心にも優しい。中華の母性',
+            desc: '中華でもさっぱり！食欲がないときでもするっと食べられる。',
+            menus: '🍚 中華粥　🥗 バンバンジー丼　🥬 野菜あんかけご飯　🫚 生姜あんかけ丼',
+            search: 'さっぱり 中華 ご飯', item: '土鍋'
+        },
+        'light_rice_cook_japanese': {
+            title: '手間ひまという名の愛情を、一粒一粒に込めて',
+            desc: 'じっくり作る、体に染みる和食の名品。素材を丁寧に活かして。',
+            menus: '🍱 鮭の炊き込みご飯　🍗 鶏の照り焼き丼　🍵 だし茶漬け　🎎 ちらし寿司',
+            search: '炊き込みご飯 レシピ', item: '土鍋'
+        },
+        'light_rice_cook_western': {
+            title: '健康と美食の間で、見事に綱渡りする洋食家',
+            desc: 'ヘルシーだけどしっかり作る！バランス洋食ご飯で体も喜ぶ。',
+            menus: '🍅 チキンのトマト煮込みご飯　🥗 グリルチキンサラダ丼　🐟 アクアパッツァご飯　🥩 ポークソテー丼',
+            search: 'ヘルシー 洋食 ご飯 レシピ', item: 'グリルパン'
+        },
+        'light_rice_cook_chinese': {
+            title: '蒸気の向こうに透ける、滋味深き中華の哲学',
+            desc: '丁寧に作る中華さっぱりご飯。蒸す・煮るで素材の旨みを引き出す。',
+            menus: '🥗 棒棒鶏丼　🍚 蒸し鶏ご飯（ハイナンチキンライス）　🥬 青菜炒め丼　🍵 中華風茶粥',
+            search: '蒸し鶏 ご飯 レシピ', item: '蒸し器'
+        },
+        'light_other_easy_japanese': {
+            title: '涼風のように胃を通り抜ける、和の清廉な一杯',
+            desc: 'さらっと食べられる！夏にも冬にもうれしい和風麺。',
+            menus: '🍜 冷やしそうめん　🥗 ざるうどん　🍝 冷やし中華（和風だれ）　🍵 おろし蕎麦',
+            search: 'さっぱり そうめん うどん', item: 'ざる'
+        },
+        'light_other_easy_western': {
+            title: '朝の光と共に現れる、パンという名の救世主',
+            desc: '軽めの洋風メニューでサッとすませる朝食・昼食に！',
+            menus: '🍞 シンプルトースト＋サラダ　🥗 ヨーグルト＋パン　🧀 クロックムッシュ（簡単版）　🥤 スムージー＋パン',
+            search: 'さっぱり 朝食 パン', item: 'トースター'
+        },
+        'light_other_easy_chinese': {
+            title: 'するりと喉を落ちていく。これが中華の引力だ',
+            desc: '中華風さっぱり麺でスルッと食べきれる軽めの一杯！',
+            menus: '🍜 冷やし中華　🫙 春雨スープ　🍝 ビーフン炒め（薄味）　🥗 冷製春雨サラダ',
+            search: '冷やし中華 さっぱり', item: 'ざる'
+        },
+        'light_other_cook_japanese': {
+            title: 'だしの香りが記憶を呼び覚ます、和麺の求道録',
+            desc: 'こだわりのさっぱり和風麺。だしをしっかり取って本格的に。',
+            menus: '🍜 手打ちうどん　🍗 鶏だしそば　🍝 にゅうめん（温）　🌕 月見そば',
+            search: '手打ち うどん 本格 レシピ', item: '麺打ち板'
+        },
+        'light_other_cook_western': {
+            title: 'イタリアの太陽を皿の上に再現した、麺芸術家',
+            desc: 'ヘルシーで丁寧な洋風麺・パン料理で豊かな食卓に。',
+            menus: '🥗 冷製カプレーゼパスタ　🍞 自家製フォカッチャ　🥬 ミネストローネ＋パン　🍝 ジェノベーゼ',
+            search: '冷製パスタ レシピ', item: 'フードプロセッサー'
+        },
+        'light_other_cook_chinese': {
+            title: 'スープの澄んだ一滴に、職人の矜持が宿る',
+            desc: '丁寧に作る本格さっぱり中華麺。スープが命のこだわりの一杯。',
+            menus: '🍜 塩ラーメン（手作りスープ）　🥢 あっさりワンタン麺　🍝 本格春雨サラダ　🥗 冷やし棒棒鶏麺',
+            search: '塩ラーメン 手作り レシピ', item: 'スープポット'
+        }
+    };
+ 
+    const ACHIEVEMENTS = [
+        { id: 'first_diagnosis', title: 'はじめての診断', desc: '診断を1回完了する', icon: '🍽️', metric: 'diagnosisCount', goal: 1 },
+        { id: 'first_gacha', title: '運だめしデビュー', desc: 'ガチャを1回まわす', icon: '🎰', metric: 'gachaCount', goal: 1 },
+        { id: 'first_favorite', title: 'お気に入りコレクター', desc: 'お気に入りに1回保存する', icon: '💖', metric: 'favoriteCount', goal: 1 },
+        { id: 'first_visit', title: 'レシピ探検隊', desc: '結果画面からサイトへ1回移動する', icon: '🚀', metric: 'siteVisitCount', goal: 1 },
+        { id: 'first_share', title: 'おすすめ共有', desc: '結果を1回共有またはコピーする', icon: '📤', metric: 'shareCount', goal: 1 },
+        { id: 'diagnosis_3', title: '診断ビギナー', desc: '診断を3回完了する', icon: '🥉', metric: 'diagnosisCount', goal: 3 },
+        { id: 'gacha_5', title: 'ガチャ好き', desc: 'ガチャを5回まわす', icon: '🎊', metric: 'gachaCount', goal: 5 },
+        { id: 'favorite_5', title: '推し献立ハンター', desc: 'お気に入りに5回保存する', icon: '💎', metric: 'favoriteCount', goal: 5 },
+        { id: 'visit_3', title: '検索マスター', desc: '結果画面からサイトへ3回移動する', icon: '🧭', metric: 'siteVisitCount', goal: 3 },
+        { id: 'share_5', title: '拡散の達人', desc: '結果を5回共有またはコピーする', icon: '📣', metric: 'shareCount', goal: 5 },
+        { id: 'diagnosis_10', title: '献立研究家', desc: '診断を10回完了する', icon: '🏅', metric: 'diagnosisCount', goal: 10 },
+        { id: 'diagnosis_30', title: '献立レジェンド', desc: '診断を30回完了する', icon: '👑', metric: 'diagnosisCount', goal: 30 }
+    ];
+
+    function getDefaultAchievementState() {
+        return {
+            diagnosisCount: 0,
+            gachaCount: 0,
+            favoriteCount: 0,
+            siteVisitCount: 0,
+            shareCount: 0,
+            unlocked: {}
+        };
+    }
+
+    function getAchievementState() {
+        try {
+            var parsed = JSON.parse(localStorage.getItem('shindan_achievements') || 'null');
+            var base = getDefaultAchievementState();
+            if (!parsed || typeof parsed !== 'object') return base;
+            Object.keys(base).forEach(function(key) {
+                if (key === 'unlocked') return;
+                if (typeof parsed[key] === 'number') base[key] = parsed[key];
+            });
+            if (parsed.unlocked && typeof parsed.unlocked === 'object') {
+                base.unlocked = parsed.unlocked;
+            }
+            return base;
+        } catch (e) {
+            return getDefaultAchievementState();
+        }
+    }
+
+    function saveAchievementState(state) {
+        try {
+            localStorage.setItem('shindan_achievements', JSON.stringify(state));
+        } catch (e) {}
+    }
+
+    function queueAchievementToast(title) {
+        if (!title) return;
+        if (!window.__achievementToastQueue) window.__achievementToastQueue = [];
+        window.__achievementToastQueue.push(title);
+        if (!window.__achievementToastActive) showNextAchievementToast();
+    }
+
+    function showNextAchievementToast() {
+        var queue = window.__achievementToastQueue || [];
+        var layer = document.getElementById('achievement-toast-layer');
+        if (!layer || queue.length === 0) {
+            window.__achievementToastActive = false;
+            return;
+        }
+        window.__achievementToastActive = true;
+        var title = queue.shift();
+        var toast = document.createElement('div');
+        toast.className = 'achievement-toast';
+        toast.innerHTML = '<div class="achievement-toast-title">' + escHtml(title) + 'を達成しました！</div>'
+            + '<div class="achievement-toast-desc">新しいバッジが解放されました</div>';
+        layer.appendChild(toast);
+        requestAnimationFrame(function() {
+            toast.classList.add('show');
+        });
+        setTimeout(function() {
+            toast.classList.remove('show');
+            setTimeout(function() {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+                showNextAchievementToast();
+            }, 380);
+        }, 3000);
+    }
+
+    function evaluateAchievements(state) {
+        var newlyUnlocked = [];
+        ACHIEVEMENTS.forEach(function(item) {
+            if (state.unlocked[item.id]) return;
+            if ((state[item.metric] || 0) >= item.goal) {
+                state.unlocked[item.id] = true;
+                newlyUnlocked.push(item.title);
+            }
+        });
+        return newlyUnlocked;
+    }
+
+    function incrementAchievementMetric(metric, amount) {
+        var step = typeof amount === 'number' ? amount : 1;
+        var state = getAchievementState();
+        state[metric] = (state[metric] || 0) + step;
+        var unlocked = evaluateAchievements(state);
+        saveAchievementState(state);
+        unlocked.forEach(queueAchievementToast);
+        if (document.getElementById('screen-achievements') && document.getElementById('screen-achievements').classList.contains('active')) {
+            renderAchievements();
+        }
+    }
+
+    function renderAchievements() {
+        var wrap = document.getElementById('achievement-list-wrap');
+        if (!wrap) return;
+        var state = getAchievementState();
+        var unlockedCount = ACHIEVEMENTS.filter(function(item) { return !!state.unlocked[item.id]; }).length;
+        var html = '<div class="achievement-summary">達成数 ' + unlockedCount + ' / ' + ACHIEVEMENTS.length + '</div>'
+                 + '<div class="achievement-list">';
+        ACHIEVEMENTS.forEach(function(item) {
+            var unlocked = !!state.unlocked[item.id];
+            html += '<div class="achievement-item ' + (unlocked ? 'unlocked' : 'locked') + '">'
+                 + '<div class="achievement-icon">' + (unlocked ? item.icon : '？') + '</div>'
+                 + '<div class="achievement-body">'
+                 + '<div class="achievement-title">' + escHtml(unlocked ? item.title : '？？？？？？') + '</div>'
+                 + '<div class="achievement-desc">' + escHtml(unlocked ? item.desc : '条件を達成すると内容が表示されます') + '</div>'
+                 + '</div>'
+                 + '<div class="achievement-status">' + (unlocked ? '達成' : '未達成') + '</div>'
+                 + '</div>';
+        });
+        html += '</div>';
+        wrap.innerHTML = html;
+    }
+
+    function getResultLinks(data) {
+        return {
+            rakuten: 'https://recipe.rakuten.co.jp/search/' + encodeURIComponent(data.search) + '/',
+            cookpad: 'https://cookpad.com/search/' + encodeURIComponent(data.search),
+            amazon: 'https://www.amazon.co.jp/s?k=' + encodeURIComponent(data.item)
+        };
+    }
+ 
+    function buildShareText(data, links) {
+        const tagParts = [];
+        for (const k of ['mood', 'base', 'effort', 'genre']) {
+            tagParts.push(answerLabels[k][answers[k]]);
+        }
+        return [
+            '🍴 らくらく献立診断｜結果',
+            '',
+            '【条件】' + tagParts.join(' · '),
+            '',
+            data.desc,
+            '',
+            '【献立】',
+            data.menus,
+            '',
+            '【リンク】',
+            '楽天レシピ: ' + links.rakuten,
+            'クックパッド: ' + links.cookpad,
+            'Amazon: ' + links.amazon
+        ].join('\n');
+    }
+ 
+    function setShareFeedback(message) {
+        var el = document.getElementById('share-feedback');
+        if (!el) return;
+        el.textContent = message || '';
+        if (el._hideTimer) clearTimeout(el._hideTimer);
+        if (message) {
+            el._hideTimer = setTimeout(function () {
+                el.textContent = '';
+            }, 2800);
+        }
+    }
+ 
+    async function shareDiagnosisResult() {
+        var text = window.__diagnosisShareText || '';
+        if (!text) return;
+        var url = location.href;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'らくらく献立診断',
+                    text: text,
+                    url: url
+                });
+                setShareFeedback('✅ 共有しました');
+                incrementAchievementMetric('shareCount', 1);
+            } catch (err) {
+                if (err && err.name !== 'AbortError') {
+                    await copyDiagnosisShareText();
+                }
+            }
+        } else {
+            await copyDiagnosisShareText();
+        }
+    }
+ 
+    async function copyDiagnosisShareText() {
+        var text = window.__diagnosisShareText || '';
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            setShareFeedback('✅ コピーしました');
+            incrementAchievementMetric('shareCount', 1);
+        } catch (e) {
+            try {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                setShareFeedback('✅ コピーしました');
+                incrementAchievementMetric('shareCount', 1);
+            } catch (e2) {
+                setShareFeedback('❌ コピーできませんでした');
+            }
+        }
+    }
+ 
+    function showResult() {
+        const key = answers.mood + '_' + answers.base + '_' + answers.effort + '_' + answers.genre;
+        const data = resultData[key] || {
+            desc: 'おすすめの献立を準備中です。',
+            menus: '🍚 シンプルな丼物　🍝 パスタ　🍜 ラーメン',
+            search: '簡単 レシピ',
+            item: '調理器具'
+        };
+ 
+        const links = getResultLinks(data);
+        const tagContainer = document.getElementById('answer-tags');
+        const resultDesc = document.getElementById('result-desc');
+        const resultBox = document.getElementById('result');
+        const progressWrap = document.querySelector('.progress-wrap');
+ 
+        tagContainer.innerHTML = ['mood', 'base', 'effort', 'genre']
+            .map(function (k) {
+                return '<span class="tag">' + answerLabels[k][answers[k]] + '</span>';
+            })
+            .join('');
+ 
+        resultDesc.textContent = data.desc;
+        // スライダー直下の献立名にも同じテキストをセット
+        var menuUnder = document.getElementById('menu-under-slide');
+        if (menuUnder) { menuUnder.textContent = data.menus; }
+        // 肩書をセット
+        var titleEl = document.getElementById('result-title');
+        if (titleEl) { titleEl.textContent = data.title || ''; }
+        // 現在のキーを保存してハートボタンの状態を復元
+        window.__currentResultKey = key;
+        updateHeartBtn(key);
+        recordCount(key);
+
+        if (window.__resultSource === 'diagnosis') {
+            incrementAchievementMetric('diagnosisCount', 1);
+        }
+        window.__resultSource = '';
+ 
+        document.getElementById('rakuten-url').href = links.rakuten;
+        document.getElementById('cookpad-url').href = links.cookpad;
+        document.getElementById('amazon-url').href = links.amazon;
+ 
+        window.__diagnosisShareText = buildShareText(data, links);
+        setShareFeedback('');
+ 
+        // 写真グリッドを更新（パターンのキーをそのまま渡す）
+        startSlideshow(key);
+ 
+        if (progressWrap) {
+            progressWrap.style.display = 'none';
+        }
+ 
+        resultBox.style.display = 'block';
+        resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+ 
+    // メニュー文字列から4つの料理名を抽出してUnsplash写真を表示
+    // グループキーごとのloremflickrキーワード
+    var slideshowKeywords = {
+        'heavy_rice_easy_japanese':  ['rice','egg','onigiri','rice-bowl'],
+        'heavy_rice_easy_western':   ['curry','egg','cheese','butter'],
+        'heavy_rice_easy_chinese':   ['fried-rice','egg','rice','stir-fry'],
+        'heavy_rice_cook_japanese':  ['katsu','chicken','beef','sushi'],
+        'heavy_rice_cook_western':   ['curry','omelette','stew','beef'],
+        'heavy_rice_cook_chinese':   ['rice','tofu','shrimp','pork'],
+        'heavy_other_easy_japanese': ['ramen','udon','noodles','noodle'],
+        'heavy_other_easy_western':  ['pasta','toast','cheese','sandwich'],
+        'heavy_other_easy_chinese':  ['noodle','ramen','noodles','spicy'],
+        'heavy_other_cook_japanese': ['ramen','udon','noodle','soba'],
+        'heavy_other_cook_western':  ['pasta','gratin','toast','pizza'],
+        'heavy_other_cook_chinese':  ['ramen','noodle','noodles','stir-fry'],
+        'light_rice_easy_japanese':  ['rice','tofu','onigiri','vegetable'],
+        'light_rice_easy_western':   ['risotto','salad','tuna','soup'],
+        'light_rice_easy_chinese':   ['porridge','chicken','rice','ginger'],
+        'light_rice_cook_japanese':  ['salmon','chicken','rice','sushi'],
+        'light_rice_cook_western':   ['chicken','salad','fish','pork'],
+        'light_rice_cook_chinese':   ['chicken','rice','greens','porridge'],
+        'light_other_easy_japanese': ['noodles','udon','somen','soba'],
+        'light_other_easy_western':  ['toast','yogurt','sandwich','smoothie'],
+        'light_other_easy_chinese':  ['noodles','soup','rice-noodle','salad'],
+        'light_other_cook_japanese': ['udon','soba','noodle','egg'],
+        'light_other_cook_western':  ['pasta','bread','soup','pesto'],
+        'light_other_cook_chinese':  ['ramen','wonton','noodle','chicken']
+    };
+ 
+    var _slideshowTimer = null;
+    var _slideIndex = 0;
+ 
+    function startSlideshow(resultKey) {
+        // 前のタイマーをリセット
+        if (_slideshowTimer) { clearInterval(_slideshowTimer); _slideshowTimer = null; }
+ 
+        var wrap  = document.getElementById('slideshow-wrap');
+        var dots  = document.getElementById('slide-dots');
+        var skel  = document.getElementById('slide-skeleton');
+ 
+        // 既存スライドを削除（skeleton/dotsは残す）
+        var oldSlides = wrap.querySelectorAll('.slide');
+        oldSlides.forEach(function(s){ s.remove(); });
+        dots.innerHTML = '';
+        if (skel) skel.style.display = 'block';
+ 
+        var keywords = slideshowKeywords[resultKey] || ['japanese-food','food','dish','meal'];
+        var slides = [];
+ 
+        keywords.forEach(function(kw, i) {
+            // loremflickr: 横長サイズでキーワード指定、lockで固定
+            var url = 'https://loremflickr.com/640/280/' + encodeURIComponent(kw + ',food') + '?lock=' + (i * 99 + kw.length);
+ 
+            // slide要素を作成
+            var slide = document.createElement('div');
+            slide.className = 'slide';
+ 
+            var img = document.createElement('img');
+            img.alt = kw;
+            img.src = url;
+            img.onload = function() {
+                if (skel) skel.style.display = 'none';
+            };
+ 
+            slide.appendChild(img);
+            wrap.insertBefore(slide, dots);
+            slides.push(slide);
+ 
+            // ドットを追加
+            var dot = document.createElement('div');
+            dot.className = 'slide-dot';
+            dots.appendChild(dot);
+        });
+ 
+        // 最初のスライドをアクティブに
+        _slideIndex = 0;
+        function showSlide(idx) {
+            slides.forEach(function(s, i) {
+                s.classList.toggle('active', i === idx);
+            });
+            var dotEls = dots.querySelectorAll('.slide-dot');
+            dotEls.forEach(function(d, i) {
+                d.classList.toggle('active', i === idx);
+            });
+        }
+        showSlide(0);
+ 
+        // 3秒ごとに次のスライドへ
+        _slideshowTimer = setInterval(function() {
+            _slideIndex = (_slideIndex + 1) % slides.length;
+            showSlide(_slideIndex);
+        }, 3000);
+    }
+ 
+    // ── お気に入り機能 ──
+    // localStorageに好きなパターンキーのセットを保存する
+    function getFavorites() {
+        try {
+            return JSON.parse(localStorage.getItem('shindan_favorites') || '[]');
+        } catch(e) { return []; }
+    }
+ 
+    function saveFavorites(arr) {
+        try { localStorage.setItem('shindan_favorites', JSON.stringify(arr)); } catch(e) {}
+    }
+ 
+    function toggleFavorite() {
+        var key = window.__currentResultKey;
+        if (!key) return;
+        var favs = getFavorites();
+        var idx  = favs.indexOf(key);
+        var wasLiked = idx !== -1;
+        if (wasLiked) {
+            favs.splice(idx, 1);
+        } else {
+            favs.push(key);
+            spawnSparks();   // ♡→♥のときだけ火花
+            incrementAchievementMetric('favoriteCount', 1);
+        }
+        saveFavorites(favs);
+        updateHeartBtn(key);
+    }
+ 
+    function spawnSparks() {
+        var btn = document.getElementById('heart-btn');
+        if (!btn) return;
+        var count = 8;
+        for (var i = 0; i < count; i++) {
+            var s = document.createElement('span');
+            s.className = 'spark';
+            // 360度を均等に割り付けて各火花の角度をCSS変数で渡す
+            var angle = (360 / count) * i;
+            s.style.setProperty('--a', angle + 'deg');
+            // ばらつきを少し加えてランダム感を出す
+            s.style.top  = '50%';
+            s.style.left = '50%';
+            btn.appendChild(s);
+            // アニメ終了後に要素を削除
+            s.addEventListener('animationend', function() { this.remove(); });
+        }
+    }
+ 
+    function updateHeartBtn(key) {
+        var btn = document.getElementById('heart-btn');
+        if (!btn) return;
+        var favs  = getFavorites();
+        var liked = favs.indexOf(key) !== -1;
+        btn.classList.toggle('liked', liked);
+        btn.setAttribute('aria-label', liked ? 'お気に入り済み' : 'お気に入りに追加');
+    }
+ 
+ 
+    // ===== 画面切り替え =====
+    function showScreen(name) {
+        document.querySelectorAll('.screen').forEach(function(s) {
+            s.classList.remove('active');
+        });
+        var target = document.getElementById('screen-' + name);
+        if (target) target.classList.add('active');
+ 
+        if (name === 'favorites') renderFavorites();
+        if (name === 'ranking')   renderRanking();
+        if (name === 'achievements') renderAchievements();
+        if (name === 'home') {
+            // ホームに戻ったときスライドを再開
+            if (_homeSlides.length === 0) initHomeSlideshow();
+            else {
+                if (_homeSlideTimer) clearInterval(_homeSlideTimer);
+                _homeSlideTimer = setInterval(function() {
+                    _homeSlideIdx = (_homeSlideIdx + 1) % _homeSlides.length;
+                    showHomeSlide(_homeSlideIdx);
+                }, 3000);
+            }
+        }
+    }
+ 
+    // ===== お気に入り一覧 =====
+    function renderFavorites() {
+        var wrap = document.getElementById('fav-list-wrap');
+        if (!wrap) return;
+        var favs = getFavorites();
+        if (favs.length === 0) {
+            wrap.innerHTML = '<div class="fav-empty"><span class="fav-empty-icon">♡</span>まだお気に入りがありません。<br>診断結果のハートを押して保存してみよう！</div>';
+            return;
+        }
+        var html = '<div class="fav-list">';
+        favs.forEach(function(key) {
+            var data = resultData[key];
+            if (!data) return;
+            html += '<div class="fav-item" data-key="' + key + '">'
+                  + '<span class="fav-item-heart">♥</span>'
+                  + '<div class="fav-item-body">'
+                  + '<div class="fav-item-title">' + escHtml(data.title || key) + '</div>'
+                  + '<div class="fav-item-menus">' + escHtml(data.menus) + '</div>'
+                  + '</div>'
+                  + '<span class="fav-item-arrow">›</span>'
+                  + '</div>';
+        });
+        html += '</div>';
+        wrap.innerHTML = html;
+    }
+ 
+    // ===== ランキング =====
+    function renderRanking() {
+        var wrap = document.getElementById('rank-list-wrap');
+        if (!wrap) return;
+ 
+        // localStorage内の全キーを集計
+        // 自分のお気に入りをカウント（他ユーザーのデータはないためデバイス内で集計）
+        var allKeys = Object.keys(resultData);
+        var counts  = {};
+        var myFavs  = getFavorites();
+ 
+        allKeys.forEach(function(k) {
+            // 自分のお気に入りに入っていれば1票
+            counts[k] = myFavs.indexOf(k) !== -1 ? 1 : 0;
+        });
+ 
+        // 過去の診断履歴ベースのカウントも加算（あれば）
+        try {
+            var stored = JSON.parse(localStorage.getItem('shindan_counts') || '{}');
+            allKeys.forEach(function(k) {
+                counts[k] = (counts[k] || 0) + (stored[k] || 0);
+            });
+        } catch(e) {}
+ 
+        // 得票0を除いてソート
+        var sorted = allKeys
+            .filter(function(k) { return counts[k] > 0; })
+            .sort(function(a, b) { return counts[b] - counts[a]; })
+            .slice(0, 10);
+ 
+        if (sorted.length === 0) {
+            wrap.innerHTML = '<div class="rank-empty">まだランキングデータがありません。<br>診断してお気に入りを登録しよう！</div>';
+            return;
+        }
+ 
+        var badges = ['gold','silver','bronze'];
+        var medals = ['🥇','🥈','🥉'];
+        var html = '<div class="rank-list">';
+        sorted.forEach(function(key, i) {
+            var data  = resultData[key];
+            if (!data) return;
+            var badge = i < 3 ? badges[i] : 'normal';
+            var medal = i < 3 ? medals[i] : (i + 1) + '位';
+            html += '<div class="rank-item" data-key="' + key + '">'
+                  + '<div class="rank-badge ' + badge + '">' + medal + '</div>'
+                  + '<div class="rank-item-body">'
+                  + '<div class="rank-item-title">' + escHtml(data.title || key) + '</div>'
+                  + '<div class="rank-item-menus">' + escHtml(data.menus) + '</div>'
+                  + '</div>'
+                  + '<div class="rank-item-count">♥ ' + counts[key] + '</div>'
+                  + '</div>';
+        });
+        html += '</div>';
+        wrap.innerHTML = html;
+    }
+ 
+    // お気に入りから結果画面へジャンプ
+    function goToResult(key) {
+        showScreen('shindan');
+        // 診断回答を再現してshowResultを呼ぶ
+        var parts = key.split('_');
+        if (parts.length === 4) {
+            answers.mood   = parts[0];
+            answers.base   = parts[1];
+            answers.effort = parts[2];
+            answers.genre  = parts[3];
+            // 質問エリアを隠して結果を表示
+            document.querySelectorAll('.question-box').forEach(function(q){ q.classList.remove('active'); });
+            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('progress-text').textContent = '4 / 4';
+            window.__resultSource = 'jump';
+            showResult();
+        }
+    }
+ 
+    // 診断結果表示時にカウントも記録（ランキング用）
+    function recordCount(key) {
+        try {
+            var stored = JSON.parse(localStorage.getItem('shindan_counts') || '{}');
+            stored[key] = (stored[key] || 0) + 1;
+            localStorage.setItem('shindan_counts', JSON.stringify(stored));
+        } catch(e) {}
+    }
+ 
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+ 
+    window.showScreen   = showScreen;
+    window.goToResult   = goToResult;
+    window.toggleFavorite = toggleFavorite;
+ 
+    function resetToHome() {
+        // 診断状態をリセット
+        currentStep = 0;
+        Object.keys(answers).forEach(function(k){ delete answers[k]; });
+        document.querySelectorAll('.question-box').forEach(function(q,i){
+            q.classList.toggle('active', i === 0);
+        });
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('progress-text').textContent = '0 / 4';
+        document.getElementById('result').style.display = 'none';
+        if (_slideshowTimer) { clearInterval(_slideshowTimer); _slideshowTimer = null; }
+        showScreen('home');
+    }
+    window.resetToHome = resetToHome;
+    // お気に入りリスト・ランキング・外部リンクのクリックをイベント委譲で処理
+    document.addEventListener('click', function(e) {
+        var favItem = e.target.closest('.fav-item[data-key]');
+        if (favItem) {
+            goToResult(favItem.dataset.key);
+            return;
+        }
+        var rankItem = e.target.closest('.rank-item[data-key]');
+        if (rankItem) {
+            goToResult(rankItem.dataset.key);
+            return;
+        }
+        var linkBtn = e.target.closest('a.link-btn');
+        if (linkBtn) {
+            incrementAchievementMetric('siteVisitCount', 1);
+        }
+    });
+ 
+    
+    // ===== ホームスライドショー =====
+    var HOME_SLIDE_KEYWORDS = [
+        'japanese-food','ramen','sushi','curry','bento',
+        'udon','tempura','rice-bowl','noodles','tonkatsu',
+        'yakitori','miso-soup','donburi','onigiri','teriyaki'
+    ];
+    var _homeSlideTimer = null;
+    var _homeSlideIdx   = 0;
+    var _homeSlides     = [];
+ 
+    function initHomeSlideshow() {
+        var wrap = document.getElementById('home-slide-wrap');
+        var dots = document.getElementById('home-slide-dots');
+        if (!wrap || !dots) return;
+ 
+        // ランダムに5枚選ぶ（毎回シャッフル）
+        var shuffled = HOME_SLIDE_KEYWORDS.slice().sort(function(){ return Math.random()-0.5; });
+        var chosen   = shuffled.slice(0, 5);
+ 
+        dots.innerHTML = '';
+        _homeSlides = [];
+ 
+        chosen.forEach(function(kw, i) {
+            // lockをランダムにして毎回違う写真
+            var lock = Math.floor(Math.random() * 9000) + 1000;
+            var url  = 'https://loremflickr.com/640/480/' + encodeURIComponent(kw + ',food') + '?lock=' + lock;
+            var img  = document.createElement('img');
+            img.className = 'home-slide-img';
+            img.alt = kw;
+            img.src = url;
+            img.onload = function() {
+                var skel = wrap.querySelector('.home-slide-skeleton');
+                if (skel) skel.style.display = 'none';
+            };
+            // overlayの直前に挿入
+            wrap.insertBefore(img, wrap.querySelector('.home-slide-overlay'));
+            _homeSlides.push(img);
+ 
+            var dot = document.createElement('div');
+            dot.className = 'home-slide-dot';
+            dots.appendChild(dot);
+        });
+ 
+        _homeSlideIdx = 0;
+        showHomeSlide(0);
+ 
+        if (_homeSlideTimer) clearInterval(_homeSlideTimer);
+        _homeSlideTimer = setInterval(function() {
+            _homeSlideIdx = (_homeSlideIdx + 1) % _homeSlides.length;
+            showHomeSlide(_homeSlideIdx);
+        }, 3000);
+    }
+ 
+    function showHomeSlide(idx) {
+        _homeSlides.forEach(function(img, i) {
+            img.classList.toggle('active', i === idx);
+        });
+        var dotEls = document.querySelectorAll('.home-slide-dot');
+        dotEls.forEach(function(d, i) {
+            d.classList.toggle('active', i === idx);
+        });
+    }
+ 
+    // ===== ガチャ機能 =====
+    var ALL_RESULT_KEYS = null;
+    var _gachaSelectedKey = null;
+    var _gachaSpun = false;
+ 
+    function openGacha() {
+        if (!ALL_RESULT_KEYS) {
+            ALL_RESULT_KEYS = Object.keys(resultData);
+        }
+        _gachaSpun = false;
+        _gachaSelectedKey = null;
+        // リセット
+        document.getElementById('gacha-machine').style.display  = 'block';
+        document.getElementById('gacha-machine').classList.remove('spinning');
+        document.getElementById('gacha-capsule').style.display = 'none';
+        document.getElementById('gacha-hint').textContent = 'ハンドルを回してね！';
+        document.getElementById('gacha-modal').classList.add('open');
+    }
+ 
+    function closeGacha() {
+        document.getElementById('gacha-modal').classList.remove('open');
+    }
+ 
+    function handleGachaClick(e) {
+        // モーダル外クリックで閉じる
+        if (e.target === document.getElementById('gacha-modal')) closeGacha();
+    }
+ 
+    function spinGacha() {
+        if (_gachaSpun) return;
+        _gachaSpun = true;
+ 
+        var machine = document.getElementById('gacha-machine');
+        machine.classList.add('spinning');
+        incrementAchievementMetric('gachaCount', 1);
+ 
+        // ランダムにキーを選ぶ
+        _gachaSelectedKey = ALL_RESULT_KEYS[Math.floor(Math.random() * ALL_RESULT_KEYS.length)];
+        var data = resultData[_gachaSelectedKey];
+ 
+        setTimeout(function() {
+            machine.classList.remove('spinning');
+            // カプセル出現
+            setTimeout(function() {
+                machine.style.display = 'none';
+                var cap = document.getElementById('gacha-capsule');
+                cap.style.display = 'block';
+                document.getElementById('capsule-text').textContent =
+                    '「' + (data.title || _gachaSelectedKey) + '」 が当たった！';
+            }, 200);
+        }, 600);
+    }
+ 
+    function openCapsule() {
+        if (!_gachaSelectedKey) return;
+        closeGacha();
+ 
+        // 診断回答をガチャ結果で埋めてから結果画面へ
+        var parts = _gachaSelectedKey.split('_');
+        if (parts.length === 4) {
+            answers.mood   = parts[0];
+            answers.base   = parts[1];
+            answers.effort = parts[2];
+            answers.genre  = parts[3];
+        }
+        currentStep = 4;
+        document.getElementById('progress-fill').style.width = '100%';
+        document.getElementById('progress-text').textContent = '4 / 4';
+        document.querySelectorAll('.question-box').forEach(function(q){ q.classList.remove('active'); });
+        showScreen('shindan');
+        window.__resultSource = 'jump';
+        showResult();
+    }
+ 
+    // SVGのハンドル部分（またはマシン全体）クリックでスピン
+    document.addEventListener('click', function(e) {
+        var svg = e.target.closest('.gacha-svg');
+        if (svg) spinGacha();
+    });
+ 
+    window.openGacha    = openGacha;
+    window.closeGacha   = closeGacha;
+    window.handleGachaClick = handleGachaClick;
+    window.openCapsule  = openCapsule;
+    window.spinGacha    = spinGacha;
+    window.initHomeSlideshow = initHomeSlideshow;
+ 
+    window.answer = answer;
+ 
+    // 初回ロード時にホームスライドショー起動
+    document.addEventListener('DOMContentLoaded', function() {
+        initHomeSlideshow();
+        renderAchievements();
+        var state = getAchievementState();
+        var unlocked = evaluateAchievements(state);
+        if (unlocked.length) saveAchievementState(state);
+    });
+    window.shareDiagnosisResult = shareDiagnosisResult;
+    window.copyDiagnosisShareText = copyDiagnosisShareText;
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
